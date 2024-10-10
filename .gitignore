@@ -47,3 +47,15 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+/.quarto/
+
+data/
+_exten*
+*.tex
+*.pdf
+*.gl*
+*.ist
+QTD*
+*.RProj
+*test*

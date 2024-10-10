@@ -1,0 +1,38 @@
+---
+subtitle: Plan d'analyse V1.0
+---
+\printglossaries
+
+## Quarto
+
+
+ Le \gls{alpha} a été fixé à 5 % & la \gls{puissance} à 80 %.
+ 
+Quarto enables \gls{naco} you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click \gls{naco} the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+library(baseph)
+library(gtsummary)
+```
+
+You can add options to \gls{anova} executable code like this[@rstat] 
+
+```{r}
+#| label: tbl-description
+#| tbl-cap: Démographie
+
+patients %>%
+  tbl_summary(
+    by = sexea,
+    missing = "no"
+  ) %>%
+  bold_labels() %>%
+  add_p() |> 
+  add_n()
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).

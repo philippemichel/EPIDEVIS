@@ -1,0 +1,209 @@
+---
+subtitle: "Rapport statistique"
+cache: false
+---
+
+# Introduction
+
+
+```{r}
+#| label: setup
+
+rm(list = ls())
+#
+library(baseph)
+library(tidyverse)
+library(gtsummary)
+library(kableExtra)
+library(lubridate)
+library(forestmodel)
+library(labelled)
+library(epiDisplay)
+library(visdat)
+library(GGally)
+library(ggridges)
+library(colorspace)
+library(apyramid)
+library(tidytext)
+library(proustr)
+library(ggwordcloud)
+#
+theme_gtsummary_language(language = "fr", decimal.mark = ",")
+options(OutDec = ",")
+#
+load(file = "data/epidevis.RData")
+expx <- FALSE
+classeur <- "epidevis1.xls"
+if (expx){system(paste0("rm -f ",classeur))}
+#
+cat <- list(all_continuous() ~ "wilcox.test", all_categorical() ~ "chisq.test")
+affl <- list(all_categorical()~"{n}/{N} ({p})")
+```
+
+
+
+## Mise en forme des données
+
+- Les variables à réponse ouverte ne sont pas exploitables statistiquement donc ont été supprimées
+- les variables constantes (La même réponse pour tous les cas) ont été supprimées
+- Les variables contenant plus de 60 % de donénes manquantes ont été supprimées
+
+L'échantillon comporte `r nrow(tt)` cas pour `r ncol(tt)` variables.
+
+## Données manquantes
+
+```{r}
+#| label: fig-manq
+#| fig-cap: Données manquantes 
+#| fig-asp: 0.6
+
+tt %>%
+vis_dat()
+```
+
+
+# Description
+
+## Population
+
+
+```{r}
+#| label: tbl-demog
+#| tbl-cap: Population
+
+tt |> 
+  dplyr::select(terme:lateralite) |>
+  tbl_summary(missing = "no", 
+              type = list(age~"continuous"),
+      ) |>
+  bold_labels() |>
+  add_n() |>
+  add_ci() |>
+  modify_header(label ~ " ") |>
+  pexptabph(nomfich = classeur,
+            nomsheet = "demog",
+            lg = TRUE,
+            exp = expx)
+```
+
+\newpage
+## EVA
+
+```{r}
+#| label: tbl-eva1
+#| tbl-cap: Score EVA
+
+tt |> 
+  dplyr::select(starts_with("eva_")) |>
+  tbl_summary(missing = "no",
+              type = list(all_categorical() ~ "continuous"))|>
+  bold_labels() |>
+  add_n() |>
+  add_ci() |>
+  modify_header(label ~ "EVA") |>
+  pexptabph(nomfich = classeur,
+            nomsheet = "eva1",
+            lg = TRUE,
+            exp = expx)
+```
+
+## KABC
+
+```{r}
+#| label: tbl-kabc1
+#| tbl-cap: Score KABC
+
+tt |> 
+  dplyr::select(starts_with("kabc_")) |>
+  tbl_summary(missing = "no",
+              type = list(all_categorical() ~ "continuous"))|>
+  bold_labels() |>
+  add_n() |>
+  add_ci() |>
+  modify_header(label ~ "KABC") |>
+  pexptabph(nomfich = classeur,
+            nomsheet = "kabc1",
+            lg = TRUE,
+            exp = expx)
+```
+\newpage
+## NEPSY
+
+```{r}
+#| label: tbl-nepsy1
+#| tbl-cap: Score EVA
+
+tt |> 
+  dplyr::select(starts_with("nepsy_")) |>
+  tbl_summary(missing = "no",
+              type = list(all_categorical() ~ "continuous"))|>
+  bold_labels() |>
+  add_n() |>
+  add_ci() |>
+  modify_header(label ~ "NEPSY") |>
+  pexptabph(nomfich = classeur,
+            nomsheet = "nepsy1",
+            lg = TRUE,
+            exp = expx)
+```
+
+## Figure de Rey
+
+```{r}
+#| label: tbl-frey1
+#| tbl-cap: Figure de Rey
+
+tt |> 
+  dplyr::select(starts_with("figure_de_rey_")) |>
+  tbl_summary(missing = "no",
+              type = list(figure_de_rey_b_nb ~ "continuous"))|>
+  bold_labels() |>
+  add_n() |>
+  add_ci() |>
+  modify_header(label ~ "Frey") |>
+  pexptabph(nomfich = classeur,
+            nomsheet = "frey1",
+            lg = TRUE,
+            exp = expx)
+```
+
+\newpage
+## BREV
+
+```{r}
+#| label: tbl-brev1
+#| tbl-cap: BREV
+
+tt |> 
+  dplyr::select(starts_with("brev_")) |>
+  tbl_summary(missing = "no",
+              type = list(all_categorical() ~ "continuous"))|>
+  bold_labels() |>
+  add_n() |>
+  add_ci() |>
+  modify_header(label ~ "BREV") |>
+  pexptabph(nomfich = classeur,
+            nomsheet = "BREV1",
+            lg = TRUE,
+            exp = expx)
+```
+
+\newpage
+## Évaluation clinique
+
+```{r}
+#| label: tbl-clin1
+#| tbl-cap: Scores globaux
+
+tt |> 
+  dplyr::select(capacites_cognitives_score_brut:motricite_percent) |>
+  tbl_summary(missing = "no")|>
+  bold_labels() |>
+  add_n() |>
+  add_ci() |>
+  modify_header(label ~ " ") |>
+  pexptabph(nomfich = classeur,
+            nomsheet = "clin1",
+            lg = TRUE,
+            exp = expx)
+```
