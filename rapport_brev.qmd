@@ -1,0 +1,200 @@
+---
+subtitle: "BREV V1.0"
+cache: true
+---
+
+# Introduction
+
+
+::: {.callout-caution}
+## Attention !
+Les résultats parfois surprenants (meilleurs résultats pour les prématurés) sont à prendre avec précaution vu la faible taille de l'échantillon.
+:::
+
+
+```{r}
+#| label: setup
+
+rm(list = ls())
+#
+library(baseph)
+library(tidyverse)
+library(gtsummary)
+library(kableExtra)
+library(forestmodel)
+library(labelled)
+library(epiDisplay)
+library(visdat)
+library(GGally)
+library(ggridges)
+library(ggsci)
+library(tidytext)
+library(purrr)
+#
+theme_gtsummary_language(language = "fr", decimal.mark = ",")
+options(OutDec = ",")
+#
+load(file = "data/brev1.RData")
+expx <- FALSE
+classeur <- "brev1.xls"
+if (expx){system(paste0("rm -f ",classeur))}
+#
+cat <- list(all_continuous() ~ "wilcox.test", all_categorical() ~ "chisq.test")
+affl <- list(all_categorical()~"{n}/{N} ({p})")
+```
+
+```{r}
+#| label: macro mm_et
+met <- function(x){
+  mm <- round(mean(x, na.rm = T),1)
+  et <- round(sd(x, na.rm = T),1)
+  ll <- paste0(mm, " (", et, ")")
+  return(ll)
+}
+```
+
+# Pathologique ou fragilité
+
+On définit comme indiquant une fragilité tout résultat inférieur de plus d'un écart-type à la moyenne de la population & pathologique si inférieur de plus de deux écarts-type.
+
+```{r}
+#| label: tbl-et
+#| tbl-cap: Fragilité & pathologique
+
+path <- function(x){
+  case_when(
+    x < -2 ~ "pathologique",
+    x < -1 ~ "fragilité",
+    .default = "normal")
+}
+
+zz <- tt |> 
+  dplyr::select(ends_with("_ds")) |> 
+  mutate(across(everything(), ~ path(.x))) |> 
+  mutate(across(everything(), ~ factor(.x, levels = c("fragilité",    "normal"  ,     "pathologique")))) |> 
+  mutate(across(everything(), ~ fct_relevel(.x,
+    "normal", "fragilité", "pathologique"))) |> 
+  pivot_longer(cols = everything(), names_to = "Item", values_to = "Résultat") |>
+  mutate(across(everything(), as.factor)) |>
+  mutate(Résultat = fct_relevel(Résultat, "normal", "fragilité", "pathologique"))|> 
+   mutate(Item = fct_relevel(Item,
+                      "brev_memoire_chiffres_ds", "brev_phono_ds", "brev_evoc_lexicale_ds",
+                      "brev_expres_syntax_ds", "brev_fluence_verbale_ds", "brev_comprehension_synta_ds",
+                      "brev_graphisme_ds", "brev_attention_selec_ds"
+   )) |> 
+  mutate(Item = fct_recode(Item,
+    "Mémoire des chiffres" = "brev_memoire_chiffres_ds",
+    "Phono score réduit" = "brev_phono_ds",
+    "Évocation lexicale" = "brev_evoc_lexicale_ds",
+    "Répétition de phrase" = "brev_expres_syntax_ds",
+    "Fluence verbale"= "brev_fluence_verbale_ds",
+    "Compréhension Syntaxique" = "brev_comprehension_synta_ds",
+    "Graphisme" = "brev_graphisme_ds",
+    "Attention sélect. Motrice" = "brev_attention_selec_ds"
+  ))
+#
+zz |> 
+  tbl_cross(percent = "row", margin = NULL) |> 
+  gexptabph(exp = expx, nomfich = classeur, nomsheet= "path_frag",lg = TRUE)
+           
+```
+
+```{r}
+#| label: fig-pathfrag
+#| fig-cap: Fragilité & pathologique
+#| fig-asp: 2
+
+zz |> 
+  ggplot()+
+ aes(x = Résultat, fill = Résultat) +
+  geom_bar(stat = "count", position = "dodge") +
+  theme_minimal() +
+   facet_grid(rows = vars(Item)) +
+  labs(title = "Fragilité & pathologique", x = "", y = "n") +
+  theme_light() +
+  scale_fill_jama() +
+  theme(
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 12),
+    axis.title.x = element_text(size = 12),
+    legend.title = element_text(size = 12),
+    axis.title.y = element_text(
+      size = 12,
+      angle = 0,
+      vjust = .5
+    ),
+  axis.text.x = element_text(size = 12),
+  axis.text.y = element_text(size = 12),
+  legend.position = "none",
+  strip.text.y = element_text(size = 12, face = "bold", angle = 0)
+  ) 
+  
+
+
+```
+
+
+
+
+# Population générale vs prématurés
+
+Ce travail compare les résultats sur différents items du score BREV recueillis sur un groupe d'enfants prématurés (34-37 SA) entre 4 ans & 4 ans et six mois aux résultats dans la population générale. 
+
+```{r}
+#| label: tbl-popg
+#| tbl-cap: Résultats dans la population générale
+#| eval: false
+
+bref |> 
+  kbl(booktabs = T) |>
+  kable_styling() |> 
+    column_spec(1, bold = T) |> 
+  row_spec(0, bold = T)
+```
+
+```{r}
+#| label: moy-groupe_prepa
+
+zz <- tt |> 
+  dplyr::select(ends_with("nn"))
+
+rpop <- function(a,b){ 
+  aa <- rnorm(100000,a,b)
+return(aa)
+}
+
+tabx <- NULL
+for(i in 1:8){
+  aa <- rpop(bref$Moyenne[i],bref$`Écart-type`[i])
+  tabx <- cbind(tabx, aa)
+  }
+
+pp <- NULL
+for(i in 1:8){
+  ww <- wilcox.test(zz[[i]], tabx[,i])
+  wwp <- beaup(ww$p.value)
+  pp <- c(pp,wwp)
+}
+```
+
+```{r}
+#| label: tbl-comp
+#| tbl-cap: prématurés vs population générale
+
+nom <- bref$Item
+popge <- paste0(bref$Moyenne,' (',bref$`Écart-type`,")")
+prema <- map(zz, met)
+
+tcomp <- tibble(nom,popge,prema,pp)
+names(tcomp) <- c(nom = "Item", popge = "Population générale", prema = "Prématurés", pp = "p-value")
+tcomp |> 
+  kbl(booktabs = TRUE, longtable = TRUE) |> 
+  kable_styling() |> 
+  column_spec(1, bold = T) |> 
+  row_spec(0, bold = T)
+
+```
+
+
+
+

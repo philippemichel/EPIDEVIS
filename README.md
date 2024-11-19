@@ -13,4 +13,4 @@
 
 Base de données clinique
 
-- **10/10/2024** Rapport statistique : uniquement les tableaux descriptif, code sans intérêt.
+- **10/10/2024** Rapport statistique : uniquement les tableaux descriptifs, code sans intérêt.

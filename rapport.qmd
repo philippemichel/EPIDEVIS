@@ -1,6 +1,6 @@
 ---
-subtitle: "Rapport statistique"
-cache: false
+subtitle: "Rapport statistique V1.0"
+cache: true
 ---
 
 # Introduction
