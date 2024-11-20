@@ -44,7 +44,7 @@ affl <- list(all_categorical()~"{n}/{N} ({p})")
 ```
 
 ```{r}
-#| label: macro mm_et
+#| laKbel: macro mm_et
 met <- function(x){
   mm <- round(mean(x, na.rm = T),1)
   et <- round(sd(x, na.rm = T),1)
@@ -179,7 +179,7 @@ for(i in 1:8){
 
 ```{r}
 #| label: tbl-comp
-#| tbl-cap: prématurés vs population générale
+#| tbl-cap: Prématurés vs population générale
 
 nom <- bref$Item
 popge <- paste0(bref$Moyenne,' (',bref$`Écart-type`,")")
@@ -195,6 +195,91 @@ tcomp |>
 
 ```
 
+```{r}
+#| label: fig-items
+#| fig-cap: Prématurés vs population générale
 
+ffp <- tt |> 
+  dplyr::select(ends_with("nn"))
+ffg <- as_tibble(tabx)
+names(ffg) <- names(ffp)
+ffp <- pivot_longer(ffp, everything())
+ffp$groupe <- "prématurés"
+ffg <- pivot_longer(ffg, everything())
+ffg$groupe <- "population générale"
+ff <- rbind(ffp,ffg) |> 
+  mutate(across(is.character, ~ as.factor(.x))) |> 
+   mutate(name = fct_relevel(name,
+                      "brev_memoire_des_chiffres_nn",
+                      "brev_phono_score_reduit_nn", 
+                      "brev_evocation_lexicale_nn",
+                      "brev_repetition_de_phrase_nn", 
+                      "brev_fluence_verbale_nn", 
+                      "brev_comprehension_synta_nn",
+                      "brev_graphisme_nn", 
+                      "brev_attention_select_motrice_nn"
+   )) |> 
+    mutate(name = fct_recode(name,
+    "Mémoire des chiffres" = "brev_memoire_des_chiffres_nn",
+    "Phono score réduit" = "brev_phono_score_reduit_nn",
+    "Évocation lexicale" = "brev_evocation_lexicale_nn",
+    "Répétition de phrase" = "brev_repetition_de_phrase_nn",
+    "Fluence verbale"= "brev_fluence_verbale_nn",
+    "Compréhension Syntaxique" = "brev_comprehension_synta_nn",
+    "Graphisme" = "brev_graphisme_nn",
+    "Attention sélect. Motrice" = "brev_attention_select_motrice_nn0"
+  ))
+
+ff |> 
+  ggplot() +
+  aes(x = name, y = value, fill = groupe) +
+  geom_boxplot(outliers = FALSE) +
+  labs(title = "Prématurés vs population générale",
+      subtitle = "",
+      x = "Item",
+      y = "score",
+      caption = "Les variables en population générale sont des simulations basées sur les résultats des scores BREV connus") +
+  theme_light() +
+  scale_fill_jama() +
+  theme(
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 12),
+    axis.title.x = element_text(size = 12),
+    legend.title = element_text(size = 12),
+    axis.title.y = element_text(
+      size = 12,
+      angle = 0,
+      vjust = .5
+    ),
+  axis.text.x = element_text(size = 12, angle = 40, hjust = 1),
+  axis.text.y = element_text(size = 12),
+  legend.position = "right"
+  )
+
+
+```
+
+# Facteurs de risque
+
+On crée un score global en additionnant tous les items du BREV. 
+
+```{r}
+#| label: score-global_prepa
+
+aa <- tt |> 
+  dplyr::select(ends_with("_nn")) 
+tt$brev_glob <- rowSums(aa, na.rm = T)
+```
+
+```{r}
+#| label: tbl-fact1
+#| tbl-cap: Facteurs de risque
+
+
+tt |>
+  dplyr::select(terme:lateralite,brev_glob) |> 
+  tbl_continuous(variable |>  = brev_glob)
+
+```
 
 
